@@ -1,20 +1,39 @@
 import React, { ChangeEvent, useRef, useState, KeyboardEvent , useEffect} from 'react'
 import './style.css'
-import { useNavigate, useParams } from 'react-router-dom';
-import { AUTH_PATH, MAIN_PATH, SEARCH_PATH, USER_PATH } from 'constant';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { AUTH_PATH, BOARD_DETAIL_PATH, BOARD_UPDATE_PATH, BOARD_WRITE_PATH, MAIN_PATH, SEARCH_PATH, USER_PATH } from 'constant';
 import { useCookies } from 'react-cookie';
-import { useLoginUserStore } from 'stores';
+import { useBoardStore, useLoginUserStore } from 'stores';
+import { BOARD_PATH } from '../../constant/index';
 
 // component : 헤더 레이아웃
 export default function Header() {
   
   // state : 로그인 유저 상태
-  const { loginUser, setLoginUser, resetLoginUser } = useLoginUserStore;
+  const { loginUser, setLoginUser, resetLoginUser } = useLoginUserStore();
+  // state : path 상태
+  const { pathname } = useLocation();
 
   // state : cookie 상태
   const [cookies,setCookie] = useCookies();
   // state : 로그인 상태
   const [isLogin, setLogin] = useState<boolean>(false);
+  // state : 인증 페이지 상태
+  const [isAuthPage, setAuthPage] = useState<boolean>(false);
+  // state : 메인 페이지 상태
+  const [isMainPage, setMainPage] = useState<boolean>(false);
+  // state : 검색 페이지 상태
+  const [isSearchPage, setSearchPage] = useState<boolean>(false);
+  // state : 게시물 상세 페이지 상태
+  const [isBoardDetailPage, setBoardDetailPage] = useState<boolean>(false);
+  // state : 게시물 작성 페이지 상태
+  const [isBoardWritePage, setBoardWritePage] = useState<boolean>(false);
+  // state : 게시물 수정 페이지 상태
+  const [isBoardUpdatePage, setBoardUpdatePage] = useState<boolean>(false);
+  // state : 유저 페이지 상태
+  const [isUserPage, setUserPage] = useState<boolean>(false);
+
+  
 
   // 네비게이트 함수
   const navigate = useNavigate();
@@ -108,13 +127,48 @@ export default function Header() {
     }
 
     if(isLogin && userEmail === loginUser?.email)
-      return (<div className='white-button' onClick={onSignOutButtonClickHandler}>{'로그아웃'}</div>);
+      return <div className='white-button' onClick={onSignOutButtonClickHandler}>{'로그아웃'}</div>;
     
     if (isLogin) 
-      return (<div className='white-button' onClick={onMyPageButtonClickHandler}>{'마이페이지'}</div>);
+      return <div className='white-button' onClick={onMyPageButtonClickHandler}>{'마이페이지'}</div>;
 
-    return (<div className='black-button' onClick={onSignInButtonClickHandler}>{'로그인'}</div>);
-  }
+    return <div className='black-button' onClick={onSignInButtonClickHandler}>{'로그인'}</div>;
+  };
+
+  // component : 업로드 버튼 컴포넌트
+  const UploadButton = () => {
+
+    // state: 게시물 상태
+    const { title, content, boardImageFileList , resetBoard } = useBoardStore();
+
+    // event handler : 업로드 버튼 클릭 이벤트 처리 함수
+    const onUploadButtonClickHandler = () => {
+
+    }
+
+    if (title && content)
+    return <div className='black-button' onClick={onUploadButtonClickHandler}>{'업로드'}</div>;
+
+    return <div className='disable-button'>{'업로드'}</div>;
+  };
+
+  // effect: path가 변경될 때마다 실행될 함수
+  useEffect(() => {
+    const isAuthPage = pathname.startsWith(AUTH_PATH());
+    setAuthPage(isAuthPage);
+    const isMainPage = pathname === MAIN_PATH();
+    setMainPage(isMainPage);
+    const isSearchPage = pathname.startsWith(SEARCH_PATH(''));
+    setSearchPage(isSearchPage);
+    const isBoardDetailPage = pathname.startsWith(BOARD_PATH()+'/'+BOARD_DETAIL_PATH(''));
+    setBoardDetailPage(isBoardDetailPage);
+    const isBoardWritePage = pathname.startsWith(BOARD_PATH()+'/'+BOARD_WRITE_PATH());
+    setBoardWritePage(isBoardWritePage);
+    const isBoardUpdatePage = pathname.startsWith(BOARD_PATH()+'/'+BOARD_UPDATE_PATH(''));
+    setBoardUpdatePage(isBoardUpdatePage);
+    const isUserPage = pathname.startsWith(USER_PATH(''));
+    setUserPage(isUserPage);
+  }, [pathname]);
 
   return (
     <div id='header'>
@@ -127,8 +181,9 @@ export default function Header() {
           <div className='header-logo'>{'Hoons Board'}</div>
         </div>
         <div className='header-right-box'>
-          <SearchButton/>
-          <MyPageButton/>
+          {(isAuthPage || isMainPage || isSearchPage || isBoardDetailPage) && <SearchButton/>}
+          {(isMainPage || isSearchPage || isBoardDetailPage || isUserPage) && <MyPageButton/>}
+          {(isBoardWritePage || isBoardUpdatePage) && <UploadButton/>}
         </div>
       </div>
     </div>
