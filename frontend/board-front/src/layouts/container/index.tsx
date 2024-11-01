@@ -13,7 +13,7 @@ export default function Container() {
 
   return (
     <>
-    {pathname}
+    {/* {pathname} */}
       <Header/>
       <Outlet/>
       {/* auth 경로의 페이지에서는 footer 요소를 숨김 */}
